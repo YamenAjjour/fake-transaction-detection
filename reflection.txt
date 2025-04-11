@@ -1,0 +1,12 @@
+## Summary
+This is a classifier to detect transactions on fake products.
+- I extracted as features the average price and the lenght of the description of the product.
+- I would have done more exploratory data analysis to explore more features.
+
+## What would I have done differently
+- I would have developed some basic features based on the product description. For example, one could extract n-grams.
+- I would have done more thorough hyper-parameter optimization currently I did only a grid search. One could use Optuna
+to explore better hyper-parameters. Of-course the size of features would have been a hyper-parameter
+ - I would have gone beyond random forest to other clasifiers (SVM). Of-course given mroe time, I would have created
+ an ensemble where one of the classifier can be an instruction-fine tuned LLM
+ 
