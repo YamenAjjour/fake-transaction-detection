@@ -130,7 +130,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if args.optimize:
         study = optuna.create_study()
-        study.optimize(train, n_trials=100, direction=["maximize"])
+        study.optimize(train, n_trials=10, direction=["maximize"])
         print("best params are")
         print(study.best_params)
         print("best performance is")
