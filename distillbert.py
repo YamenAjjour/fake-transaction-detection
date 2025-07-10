@@ -92,9 +92,11 @@ def train(trial =None, learning_rate : float =None , batch : int = None, epochs 
                 labels.extend(batch["output"].cpu().tolist())
                 predictions.extend(torch.argmax(output[0],dim=1).cpu().tolist())
         metrics["f1-score fake"] = f1_score(labels, predictions, labels=[1])
-        print(f"labels = {labels}")
-        print(f"predictions = {predictions}")
-        print(f"accuracy={metrics["f1-score fake"]}")
+        metrics["accuracy"] = accracy_score(labels, predictions)
+
+        print(f"f1={metrics["f1-score fake"]}")
+        print(f"accuracy={metrics["accuracy"]}")
+
         print(f"{test_split}_loss={metrics[f"{test_split}/loss"]}")
 
     return metrics["f1-score fake"]
@@ -110,7 +112,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if args.optimize:
         study = optuna.create_study()
-        study.optimize(train, n_trials=10)
+        study.optimize(train, n_trials=100)
         print("best params are")
         print(study.best_params)
     train(args.learning_rate, args.batch_size, args.epochs, args.debug)
