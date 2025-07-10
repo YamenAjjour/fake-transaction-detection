@@ -3,3 +3,5 @@ transformers
 datasets
 pandas
 scikit-learn
+yaml
+fastapi[standard]

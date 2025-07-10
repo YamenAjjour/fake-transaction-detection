@@ -1,14 +1,16 @@
 from datasets import Dataset, DatasetDict
 import datasets
 import pandas as pd
-from torch.utils.data import DataLoader
-from transformers import AutoModel, AutoModelForSequenceClassification, AutoTokenizer
-from torch.optim import AdamW
-from sklearn.metrics import accuracy_score, f1_score
 import argparse
 import torch
 import optuna
 from torch import nn
+from torch.utils.data import DataLoader
+from transformers import AutoModel, AutoModelForSequenceClassification, AutoTokenizer
+from torch.optim import AdamW
+from sklearn.metrics import accuracy_score, f1_score
+from config import *
+
 def load_dataset(debug) -> DatasetDict:
     df_train = pd.read_csv("train.csv")
     df_test = pd.read_csv("test.csv")
@@ -60,7 +62,7 @@ def train(trial =None, learning_rate : float =None , batch : int = None, epochs 
     model = AutoModelForSequenceClassification.from_pretrained("distilbert/distilbert-base-uncased", num_labels=2).to("cuda")
     optimizer = AdamW(model.parameters(),lr=learning_rate)
     criterion = nn.CrossEntropyLoss().cuda()
-
+    config = get_config()
     metrics = {}
     for epoch in range(epochs):
         train_loss = 0
@@ -98,8 +100,24 @@ def train(trial =None, learning_rate : float =None , batch : int = None, epochs 
         print(f"accuracy={metrics["accuracy"]}")
 
         print(f"{test_split}_loss={metrics[f"{test_split}/loss"]}")
+    if not trial:
+        model.save_pretrained(config["model_path"])
 
     return metrics["f1-score fake"]
+
+def load_modal_and_tokenizer():
+    config = get_config()
+    model_path = config["model_path"]
+    model = AutoModelForSequenceClassification.from_pretrained(model_path).to("cuda")
+    tokenizer = AutoTokenizer.from_pretrained("distilbert/distilbert-base-uncased", truncation=True, max_length=100, padding=True)
+    return model, tokenizer
+
+def predict(transaction, model, tokenizer):
+    instance = tokenizer(transaction, padding="max_length", truncation=True, return_tensors="pt")
+    output = model(instance["input_ids"].to("cuda"), instance["attention_mask"].to("cuda"))
+    i = torch.argmax(output[0]).item()
+    map = {0: "not fake", 1: "fake"}
+    return map[i]
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -112,9 +130,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if args.optimize:
         study = optuna.create_study()
-        study.optimize(train, n_trials=100)
+        study.optimize(train, n_trials=100, direction=["maximize"])
         print("best params are")
         print(study.best_params)
         print("best performance is")
         print(study.best_value)
-    train(args.learning_rate, args.batch_size, args.epochs, args.debug)
+    train(learning_rate=args.learning_rate, batch=args.batch_size,epochs= args.epochs,debug= args.debug)
