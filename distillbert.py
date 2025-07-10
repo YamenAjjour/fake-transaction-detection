@@ -92,7 +92,7 @@ def train(trial =None, learning_rate : float =None , batch : int = None, epochs 
                 labels.extend(batch["output"].cpu().tolist())
                 predictions.extend(torch.argmax(output[0],dim=1).cpu().tolist())
         metrics["f1-score fake"] = f1_score(labels, predictions, labels=[1])
-        metrics["accuracy"] = accracy_score(labels, predictions)
+        metrics["accuracy"] = accuracy_score(labels, predictions)
 
         print(f"f1={metrics["f1-score fake"]}")
         print(f"accuracy={metrics["accuracy"]}")
