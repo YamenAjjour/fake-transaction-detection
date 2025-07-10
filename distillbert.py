@@ -115,4 +115,6 @@ if __name__ == "__main__":
         study.optimize(train, n_trials=100)
         print("best params are")
         print(study.best_params)
+        print("best performance is")
+        print(study.best_value)
     train(args.learning_rate, args.batch_size, args.epochs, args.debug)
