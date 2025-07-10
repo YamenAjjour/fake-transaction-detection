@@ -36,7 +36,7 @@ def extract_features(df):
     :param df: input split dataframe that contains the features and the class Fake
     :return: a dataframe that contains the new features
     """
-        df["len-desc"] = df["product_description"].map(lambda x: len(x))
+    df["len-desc"] = df["product_description"].map(lambda x: len(x))
     #X = df["len-desc"].values.reshape(-1, 1)
     X = df[["len-desc","AveragePrice"]].values
     Y = df["Fake"].values

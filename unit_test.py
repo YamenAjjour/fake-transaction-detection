@@ -2,7 +2,7 @@ import unittest
 from distillbert import *
 class TestDistill(unittest.TestCase):
     def test_loading_model(self):
-        model = train(0,0, 10)
+        model = train(2e-5,10, 10)
         self.assertTrue(model)
 
     def test_load_dataset(self):
