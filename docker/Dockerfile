@@ -5,7 +5,7 @@ RUN mkdir -p /fake-transaction-detector
 COPY . /fake-transaction-detector
 WORKDIR /fake-transaction-detector
 
-RUN pip install torch transformers datasets pandas scikit-learn fastapi[standard]
+RUN pip install torch transformers datasets pandas scikit-learn fastapi
 
 
 

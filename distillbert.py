@@ -4,6 +4,7 @@ import pandas as pd
 import argparse
 import torch
 import optuna
+import seaborn as sns
 from torch import nn
 from torch.utils.data import DataLoader
 from transformers import AutoModel, AutoModelForSequenceClassification, AutoTokenizer
@@ -64,9 +65,14 @@ def train(trial =None, learning_rate : float =None , batch : int = None, epochs 
     criterion = nn.CrossEntropyLoss().cuda()
     config = get_config()
     metrics = {}
+    train_losses = []
+    val_losses = []
+    steps = []
     for epoch in range(epochs):
         train_loss = 0
+        steps.append(epoch)
         for step, batch in enumerate(train_data_loader):
+
             mask = batch["attention_mask"].to("cuda").squeeze(1)
             input_ids = batch["input_ids"].to("cuda").squeeze(1)
             output = model(input_ids, mask)
@@ -77,13 +83,18 @@ def train(trial =None, learning_rate : float =None , batch : int = None, epochs 
             optimizer.step()
             optimizer.zero_grad()
             metrics["train/loss"] = train_loss / (step +1)
+        train_losses.append(train_loss.item() / (step +1))
         val_loss = 0
         print(f"train_loss={metrics["train/loss"]}")
         labels = []
         predictions = []
         model.eval()
+
+
         with torch.no_grad():
+
             for step, batch in enumerate(val_data_loader):
+
                 mask = batch["attention_mask"].to("cuda").squeeze(1)
                 input_ids = batch["input_ids"].to("cuda").squeeze(1)
                 output = model(input_ids, mask)
@@ -93,13 +104,20 @@ def train(trial =None, learning_rate : float =None , batch : int = None, epochs 
                 metrics[f"{test_split}/loss"] = val_loss / (step+1)
                 labels.extend(batch["output"].cpu().tolist())
                 predictions.extend(torch.argmax(output[0],dim=1).cpu().tolist())
+            val_losses.append(val_loss.item() / (step+1))
         metrics["f1-score fake"] = f1_score(labels, predictions, labels=[1])
         metrics["accuracy"] = accuracy_score(labels, predictions)
 
-        print(f"f1={metrics["f1-score fake"]}")
-        print(f"accuracy={metrics["accuracy"]}")
+        df_train =pd.DataFrame({"step":steps, "train_loss":train_losses,})
+        df_val = pd.DataFrame({"step":steps, "val_loss": val_losses})
+        plot = sns.lineplot(df_train, x="step", y="train_loss")
+        plot = sns.lineplot(df_val, x="step", y="val_loss")
 
-        print(f"{test_split}_loss={metrics[f"{test_split}/loss"]}")
+        plot.get_figure().savefig("output.png")
+        #print(f"f1={metrics["f1-score fake"]}")
+        #print(f"accuracy={metrics["accuracy"]}")
+
+        #print(f"{test_split}_loss={metrics[f"{test_split}/loss"]}")
     if not trial:
         model.save_pretrained(config["model_path"])
 
